@@ -78,9 +78,9 @@ else
     protected override async Task OnInitializedAsync()
     {
         HttpClient client = new HttpClient();
-        var byteArray = new UTF8Encoding().GetBytes("mail:token");
+        var byteArray = new UTF8Encoding().GetBytes("abc@xyz.com:qwertyuiop");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
-        var request = new HttpRequestMessage(HttpMethod.Get, "Rest Url");
+        var request = new HttpRequestMessage(HttpMethod.Get, "https://api.atlassian.com/ex/jira/:cloudId:/rest/agile/1.0/sprint/20387/issue");
         var response = await client.SendAsync(request);
         if (response.IsSuccessStatusCode && DataSource == null)
         {
