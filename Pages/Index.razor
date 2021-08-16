@@ -1,0 +1,190 @@
+﻿@page "/"
+
+@using System.Text
+@using System.Net.Http.Headers
+@using Newtonsoft.Json
+@using Syncfusion.Blazor.Schedule
+
+@if (DataSource == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (getTasksError)
+{
+    <p>Unable to get tasks from JIRA. Please try again later.</p>
+}
+else
+{
+    <SfSchedule TValue="AppointmentModel" Readonly="true" ShowQuickInfo="false" EnableAutoRowHeight="true" Height="480px" @bind-SelectedDate="@CurrentDate" @bind-CurrentView=@CurrentView>
+        <ScheduleEventSettings DataSource="@DataSource" EnableTooltip="true">
+            <TooltipTemplate>
+                @{
+                var data = (context as AppointmentModel);
+                <p>@data.Subject</p>
+                <p>@data.Description</p>
+            }
+        </TooltipTemplate>
+    </ScheduleEventSettings>
+    <ScheduleViews>
+        <ScheduleView Option="View.Month"></ScheduleView>
+    </ScheduleViews>
+    <ScheduleTemplates>
+        <CellHeaderTemplate>
+            @context.Date.Day
+            @{
+                var count = GetIssueCount(@context.Date);
+                if (count > 0)
+                {
+                    <span> Issues: @GetIssueCount(@context.Date)</span>
+                }
+            }
+        </CellHeaderTemplate>
+    </ScheduleTemplates>
+</SfSchedule>
+}
+
+<style>
+    .e-schedule .e-month-view .low {
+        background: #99ccff;
+    }
+
+    .e-schedule .e-month-view .normal {
+        background: #66cc66;
+    }
+
+    .e-schedule .e-month-view .high {
+        background: #006633;
+    }
+
+    .e-schedule .e-month-view .critical {
+        background: #ff0000;
+    }
+
+    .e-schedule .e-month-view .ultra-critical {
+        background: #990000;
+    }
+
+    .e-schedule .e-month-view .release-breaker {
+        background: #000000;
+    }
+</style>
+
+@code {
+    private bool getTasksError;
+    DateTime CurrentDate = new DateTime(2021, 1, 1);
+    View CurrentView = View.Month;
+    List<AppointmentModel> DataSource;
+
+    protected override async Task OnInitializedAsync()
+    {
+        HttpClient client = new HttpClient();
+        var byteArray = new UTF8Encoding().GetBytes("mail:token");
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+        var request = new HttpRequestMessage(HttpMethod.Get, "Rest Url");
+        var response = await client.SendAsync(request);
+        if (response.IsSuccessStatusCode && DataSource == null)
+        {
+            var responseStream = await response.Content.ReadAsStringAsync();
+            var data = JsonConvert.DeserializeObject<JIRA>(responseStream);
+            List<AppointmentModel> events = new List<AppointmentModel>();
+            foreach (var issue in data.Issues)
+            {
+                events.Add(new AppointmentModel()
+                {
+                    Id = issue.Id,
+                    Subject = issue.Fields.Summary,
+                    Description = issue.Fields.Description,
+                    StartTime = issue.Fields.Created,
+                    EndTime = issue.Fields.Created.AddHours(1),
+                    IsAllDay = true,
+                    CssClass = GetCssClass(issue.Fields.Priority.Name)
+                });
+            }
+            DataSource = events;
+        }
+        else
+        {
+            getTasksError = true;
+        }
+    }
+
+    public int GetIssueCount(DateTime date)
+    {
+        DateTime endDate = date.AddDays(1);
+        if (DataSource != null)
+        {
+            return DataSource.Where(d => d.StartTime >= date && d.EndTime <= endDate).Count();
+        }
+        return 0;
+    }
+
+    public string GetCssClass(string priority)
+    {
+        string css;
+        if (priority == "Release-Breaker")
+        {
+            css = "release-breaker";
+        }
+        else if (priority == "Normal")
+        {
+            css = "normal";
+        }
+        else if (priority == "High")
+        {
+            css = "high";
+        }
+        else if (priority == "Critical")
+        {
+            css = "critical";
+        }
+        else if (priority == "Ultra Critical")
+        {
+            css = "ultra-crtical";
+        }
+        else
+        {
+            css = "low";
+        }
+        return css;
+    }
+
+    public class AppointmentModel
+    {
+        public int Id { get; set; }
+        public string Subject { get; set; }
+        public string Location { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public string Description { get; set; }
+        public bool IsAllDay { get; set; }
+        public string RecurrenceRule { get; set; }
+        public string RecurrenceException { get; set; }
+        public Nullable<int> RecurrenceID { get; set; }
+        public string CssClass { get; set; }
+    }
+
+    public class JIRA
+    {
+        public List<JIRAIssue> Issues { get; set; }
+    }
+
+    public class JIRAIssue
+    {
+        public int Id { get; set; }
+        public String Key { get; set; }
+        public JIRAField Fields { get; set; }
+    }
+
+    public class JIRAField
+    {
+        public String Summary { get; set; }
+        public DateTime Created { get; set; }
+        public String Description { get; set; }
+        public Priority Priority { get; set; }
+    }
+
+    public class Priority
+    {
+        public string Name { get; set; }
+    }
+}
