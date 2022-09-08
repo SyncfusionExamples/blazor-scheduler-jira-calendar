@@ -1,6 +1,6 @@
-# Blazor Scheduler with Jira Calendar
+# Blazor Scheduler with JIRA Calendar
 
-This project contains that adding the calendar with Blazor Scheduler. 
+This project contains that adding the JIRA calendar with Blazor Scheduler.
 
 ## Prerequisites
 
