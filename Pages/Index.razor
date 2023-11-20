@@ -7,40 +7,40 @@
 
 @if (DataSource == null)
 {
-    <p><em>Loading...</em></p>
+        <p><em>Loading...</em></p>
 }
 else if (getTasksError)
 {
-    <p>Unable to get tasks from JIRA. Please try again later.</p>
+        <p>Unable to get tasks from JIRA. Please try again later.</p>
 }
 else
 {
-    <SfSchedule TValue="AppointmentModel" Readonly="true" ShowQuickInfo="false" EnableAutoRowHeight="true" Height="480px" @bind-SelectedDate="@CurrentDate" @bind-CurrentView=@CurrentView>
-        <ScheduleEventSettings DataSource="@DataSource" EnableTooltip="true">
-            <TooltipTemplate>
+        <SfSchedule TValue="AppointmentModel" Readonly="true" ShowQuickInfo="false" EnableAutoRowHeight="true" Height="480px" @bind-SelectedDate="@CurrentDate" @bind-CurrentView=@CurrentView>
+            <ScheduleEventSettings DataSource="@DataSource" EnableTooltip="true">
+                <TooltipTemplate>
                 @{
-                var data = (context as AppointmentModel);
-                <p>@data.Subject</p>
-                <p>@data.Description</p>
-            }
-        </TooltipTemplate>
-    </ScheduleEventSettings>
-    <ScheduleViews>
-        <ScheduleView Option="View.Month"></ScheduleView>
-    </ScheduleViews>
-    <ScheduleTemplates>
-        <CellHeaderTemplate>
-            @context.Date.Day
-            @{
-                var count = GetIssueCount(@context.Date);
-                if (count > 0)
-                {
-                    <span> Issues: @GetIssueCount(@context.Date)</span>
+                    var data = (context as AppointmentModel);
+                        <p>@data.Subject</p>
+                        <p>@data.Description</p>
                 }
-            }
-        </CellHeaderTemplate>
-    </ScheduleTemplates>
-</SfSchedule>
+            </TooltipTemplate>
+        </ScheduleEventSettings>
+        <ScheduleViews>
+            <ScheduleView Option="View.Month"></ScheduleView>
+        </ScheduleViews>
+        <ScheduleTemplates>
+            <CellHeaderTemplate>
+                @context.Date.Day
+                @{
+                    var count = GetIssueCount(@context.Date);
+                    if (count > 0)
+                    {
+                                <span> Issues: @GetIssueCount(@context.Date)</span>
+                    }
+                }
+            </CellHeaderTemplate>
+        </ScheduleTemplates>
+    </SfSchedule>
 }
 
 <style>
@@ -90,15 +90,15 @@ else
             foreach (var issue in data.Issues)
             {
                 events.Add(new AppointmentModel()
-                {
-                    Id = issue.Id,
-                    Subject = issue.Fields.Summary,
-                    Description = issue.Fields.Description,
-                    StartTime = issue.Fields.Created,
-                    EndTime = issue.Fields.Created.AddHours(1),
-                    IsAllDay = true,
-                    CssClass = GetCssClass(issue.Fields.Priority.Name)
-                });
+                    {
+                        Id = issue.Id,
+                        Subject = issue.Fields.Summary,
+                        Description = issue.Fields.Description,
+                        StartTime = issue.Fields.Created,
+                        EndTime = issue.Fields.Created.AddHours(1),
+                        IsAllDay = true,
+                        CssClass = GetCssClass(issue.Fields.Priority.Name)
+                    });
             }
             DataSource = events;
         }
